@@ -9,7 +9,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
 
-  const API_URL = 'https://huggingface.co/spaces/ikhwannt/wti-prediction-api'; 
+  const API_URL = 'https://ikhwannt-wti-prediction-api.hf.space'; 
 
   const handlePredict = async () => {
     setLoading(true);
