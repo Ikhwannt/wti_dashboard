@@ -9,7 +9,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
 
-  const API_URL = 'http://localhost:8000/api/predict'; // Ganti dengan URL backend production nanti
+  const API_URL = 'https://huggingface.co/spaces/ikhwannt/wti-prediction-api'; 
 
   const handlePredict = async () => {
     setLoading(true);
