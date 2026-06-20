@@ -3,7 +3,8 @@ import { useState, useMemo } from 'react';
 import axios from 'axios';
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Area, AreaChart 
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Area, AreaChart,
+  ScatterChart, Scatter, ReferenceLine
 } from 'recharts';
 import { Activity, Droplet, Database, ShieldAlert, Cpu, Terminal, Zap, TrendingUp } from 'lucide-react';
 
@@ -128,6 +129,14 @@ export default function Dashboard() {
     });
   }, [data]);
 
+  // Menghitung batas minimum dan maksimum untuk sumbu Scatter Plot
+  const scatterDomain = useMemo(() => {
+    if (!testSetData || testSetData.length === 0) return [0, 100];
+    const minActual = Math.min(...testSetData.map((d: any) => d.Actual));
+    const maxActual = Math.max(...testSetData.map((d: any) => d.Actual));
+    return [Math.floor(minActual - 5), Math.ceil(maxActual + 5)];
+  }, [testSetData]);
+
   // Custom Tooltip Radar Chart
   const CustomRadarTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -179,11 +188,11 @@ export default function Dashboard() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Zap className="text-cyan-400 w-4 h-4" />
-                <p className="text-cyan-400 text-[10px] font-bold tracking-[0.3em] uppercase">Research Dashboard</p>
+                <p className="text-cyan-400 text-[10px] font-bold tracking-[0.3em] uppercase">Core Engine Active</p>
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500 mb-4 flex items-center gap-3">
                 <Droplet className="text-cyan-500 w-10 h-10 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]" /> 
-                WTI Crude <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">Prediction</span>
+                WTI Crude <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">Nexus</span>
               </h1>
               <p className="text-slate-400 max-w-2xl text-sm leading-relaxed">
                 Advanced forecasting matrix deploying Hybrid FinBERT-LSTM architectures against deterministic statistical baselines (ARIMA, SVR).
@@ -486,6 +495,55 @@ export default function Dashboard() {
                   {idx < 3 && <div className="border-b border-white/[0.05] mt-6" />}
                 </div>
               ))}
+            </div>
+
+            {/* SCATTER PLOT ANALYSIS (ACTUAL VS PREDICTED) */}
+            <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6 space-y-6">
+              <div className="border-b border-white/[0.05] pb-4 flex items-center justify-between">
+                <h2 className="text-[10px] font-bold tracking-[0.2em] text-cyan-400 uppercase flex items-center gap-2">
+                  <Activity size={14} /> Dispersion Analysis: Actual vs Predicted
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { key: 'Hybrid', title: 'Hybrid FinBERT-LSTM', metricKey: 'Hybrid FinBERT-LSTM', color: colors.hybrid },
+                  { key: 'LSTM', title: 'LSTM (No Sentiment)', metricKey: 'LSTM (no sentiment)', color: colors.lstm },
+                  { key: 'ARIMA', title: 'ARIMA', metricKey: 'ARIMA', color: colors.arima },
+                  { key: 'SVR', title: 'SVR', metricKey: 'SVR', color: colors.svr }
+                ].map((model) => (
+                  <div key={model.key} className="relative bg-[#050505]/30 border border-white/5 rounded-xl p-4 hover:border-white/10 transition-colors">
+                    <div className="text-center mb-3">
+                        <h3 className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">{model.title}</h3>
+                        <span className="text-[9px] text-slate-500 font-mono">
+                          R² = {data.metrics[model.metricKey]?.R2?.toFixed(4) || '0.0000'}
+                        </span>
+                    </div>
+                    <div className="h-48 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ScatterChart margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                          <XAxis type="number" dataKey="Actual" name="Aktual" domain={scatterDomain} stroke="#475569" fontSize={9} tickLine={false} axisLine={false} />
+                          <YAxis type="number" dataKey={model.key} name="Prediksi" domain={scatterDomain} stroke="#475569" fontSize={9} tickLine={false} axisLine={false} />
+                          <RechartsTooltip 
+                            cursor={{strokeDasharray: '3 3'}} 
+                            contentStyle={{ backgroundColor: 'rgba(5,5,5,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} 
+                            itemStyle={{ fontFamily: 'monospace', fontSize: '11px' }} 
+                          />
+                          <Scatter data={testSetData} fill={model.color} fillOpacity={0.4} />
+                          <ReferenceLine 
+                            segment={[{ x: scatterDomain[0], y: scatterDomain[0] }, { x: scatterDomain[1], y: scatterDomain[1] }]} 
+                            stroke="#ef4444" 
+                            strokeDasharray="4 4" 
+                            strokeWidth={1.5} 
+                            opacity={0.8}
+                          />
+                        </ScatterChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
             
             <div className="bg-cyan-950/30 border border-cyan-500/30 p-5 rounded-2xl flex gap-4 items-start relative overflow-hidden">
