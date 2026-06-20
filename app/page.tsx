@@ -2,10 +2,10 @@
 import { useState, useMemo } from 'react';
 import axios from 'axios';
 import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, 
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Area, AreaChart 
 } from 'recharts';
-import { Activity, Droplet, TrendingUp, TrendingDown, Info, BarChart3, Database, ShieldAlert, Cpu } from 'lucide-react';
+import { Activity, Droplet, Info, BarChart3, Database, ShieldAlert, Cpu, Terminal, Zap } from 'lucide-react';
 
 export default function Dashboard() {
   const [eventText, setEventText] = useState('');
@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('predict');
   
   // History Tab State
-  const [period, setPeriod] = useState(252); // Default 1Y (252 hari kerja)
+  const [period, setPeriod] = useState(252); 
   const [showBrent, setShowBrent] = useState(true);
   const [showVix, setShowVix] = useState(false);
 
@@ -32,7 +32,7 @@ export default function Dashboard() {
       if(!refDate) setRefDate(response.data.last_date);
     } catch (error) {
       console.error("Error fetching predictions", error);
-      alert("Gagal menghubungi API.");
+      alert("Gagal menghubungi API. Pastikan server Hugging Face sedang berjalan.");
     }
     setLoading(false);
   };
@@ -45,7 +45,6 @@ export default function Dashboard() {
 
   const returnDistData = useMemo(() => {
     if (!data) return [];
-    // Membuat binning manual untuk histogram return (simulasi)
     const rets = histData.map((d: any) => d.wti_return).filter(Boolean);
     if(rets.length === 0) return [];
     
@@ -76,34 +75,44 @@ export default function Dashboard() {
     ];
   }, [data]);
 
-  const barData = useMemo(() => {
-    if(!data) return [];
-    return ['MAE', 'RMSE', 'MAPE', 'R2'].map(metric => ({
-      name: metric,
-      Hybrid: data.metrics['Hybrid FinBERT-LSTM'][metric],
-      LSTM: data.metrics['LSTM (no sentiment)'][metric],
-      ARIMA: data.metrics['ARIMA'][metric],
-      SVR: data.metrics['SVR'][metric]
-    }));
-  }, [data]);
+  // Futuristic Color Palette
+  const colors = {
+    hybrid: "#06b6d4", // Cyan 500
+    lstm: "#8b5cf6",   // Violet 500
+    arima: "#ec4899",  // Pink 500
+    svr: "#f59e0b",    // Amber 500
+    grid: "rgba(255,255,255,0.05)"
+  };
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-slate-200 p-4 md:p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#030712] text-slate-300 p-4 md:p-8 font-sans selection:bg-cyan-500/30 relative overflow-hidden">
+      
+      {/* Background Glow Effects */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-900/20 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-900/20 blur-[120px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto space-y-8 relative z-10">
         
         {/* HERO HEADER */}
-        <div className="relative bg-gradient-to-br from-slate-900 to-[#1e1b4b] border border-slate-800 rounded-2xl p-8 overflow-hidden">
-          <div className="relative z-10">
-            <p className="text-indigo-400 text-xs font-bold tracking-widest uppercase mb-2">Research Dashboard</p>
-            <h1 className="text-4xl font-bold text-slate-100 mb-2 flex items-center gap-3">
-              <Droplet className="text-orange-500" /> WTI Oil Price <span className="text-orange-500">Prediction</span>
-            </h1>
-            <p className="text-slate-400 max-w-2xl text-sm">
-              Comparing 4 forecasting models — FinBERT-LSTM hybrid, LSTM, ARIMA, and SVR — on daily WTI crude oil prices (2010–2026).
-            </p>
-            <div className="flex gap-2 mt-4">
-              {['FinBERT-LSTM', 'LSTM', 'ARIMA', 'SVR', 'Lookback · 30 days'].map(b => (
-                <span key={b} className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs rounded-full font-mono">{b}</span>
+        <div className="relative bg-white/[0.02] border border-white/[0.05] backdrop-blur-3xl rounded-3xl p-10 overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="text-cyan-400 w-4 h-4" />
+                <p className="text-cyan-400 text-[10px] font-bold tracking-[0.3em] uppercase">Core Engine Active</p>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500 mb-4 flex items-center gap-3">
+                <Droplet className="text-cyan-500 w-10 h-10 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]" /> 
+                WTI Crude <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">Nexus</span>
+              </h1>
+              <p className="text-slate-400 max-w-2xl text-sm leading-relaxed">
+                Advanced forecasting matrix deploying Hybrid FinBERT-LSTM architectures against deterministic statistical baselines (ARIMA, SVR).
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 md:max-w-xs justify-end">
+              {['FinBERT-LSTM', 'LSTM', 'ARIMA', 'SVR'].map(b => (
+                <span key={b} className="px-3 py-1 bg-white/[0.03] border border-white/10 text-slate-300 text-[10px] uppercase tracking-wider rounded-md font-mono shadow-[0_0_10px_rgba(255,255,255,0.02)]">{b}</span>
               ))}
             </div>
           </div>
@@ -111,35 +120,30 @@ export default function Dashboard() {
 
         {/* STAT ROW */}
         {data && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-[#111827] border border-slate-800 p-4 rounded-xl">
-              <div className="text-2xl font-bold font-mono text-white">${data.last_price.toFixed(2)}</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Latest WTI · {data.last_date}</div>
-            </div>
-            <div className="bg-[#111827] border border-slate-800 p-4 rounded-xl">
-              <div className="text-2xl font-bold font-mono text-white">${(histData.reduce((acc:any, d:any) => acc + d.wti_price, 0) / histData.length || 0).toFixed(2)}</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Period Average</div>
-            </div>
-            <div className="bg-[#111827] border border-slate-800 p-4 rounded-xl">
-              <div className="text-2xl font-bold font-mono text-white">${Math.max(...histData.map((d:any) => d.wti_price)).toFixed(2)}</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Period High</div>
-            </div>
-            <div className="bg-[#111827] border border-slate-800 p-4 rounded-xl">
-              <div className="text-2xl font-bold font-mono text-white">{data.history.length.toLocaleString()}</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Total Trading Days</div>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in slide-in-from-bottom-4 duration-700">
+            {[
+              { label: "Latest WTI", value: `$${data.last_price.toFixed(2)}`, sub: data.last_date, color: "text-cyan-400" },
+              { label: "Period Avg", value: `$${(histData.reduce((acc:any, d:any) => acc + d.wti_price, 0) / histData.length || 0).toFixed(2)}`, sub: "Mean Value", color: "text-white" },
+              { label: "Period High", value: `$${Math.max(...histData.map((d:any) => d.wti_price)).toFixed(2)}`, sub: "Peak Value", color: "text-white" },
+              { label: "Trading Days", value: data.history.length.toLocaleString(), sub: "Dataset Volume", color: "text-white" }
+            ].map((stat, i) => (
+              <div key={i} className="bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all duration-300 p-5 rounded-2xl backdrop-blur-md group">
+                <div className={`${stat.color} text-2xl md:text-3xl font-black font-mono tracking-tight group-hover:scale-105 transition-transform origin-left`}>{stat.value}</div>
+                <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-2">{stat.label} <span className="opacity-50">· {stat.sub}</span></div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* TABS NAVIGATION */}
-        <div className="flex border-b border-slate-800 pt-4">
+        <div className="flex p-1 bg-white/[0.02] border border-white/[0.05] rounded-xl w-max backdrop-blur-md">
           {[
-            { id: 'predict', icon: <Cpu size={16}/>, label: 'Predict & Compare' },
-            { id: 'history', icon: <Database size={16}/>, label: 'Historical Data' },
-            { id: 'performance', icon: <BarChart3 size={16}/>, label: 'Model Performance' }
+            { id: 'predict', icon: <Terminal size={14}/>, label: 'Inference' },
+            { id: 'history', icon: <Database size={14}/>, label: 'Telemetry' },
+            { id: 'performance', icon: <Cpu size={14}/>, label: 'Diagnostics' }
           ].map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === t.id ? 'border-indigo-500 text-slate-100' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+              className={`flex items-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-lg transition-all duration-300 ${activeTab === t.id ? 'bg-gradient-to-r from-cyan-500/20 to-violet-500/20 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]'}`}
             >
               {t.icon} {t.label}
             </button>
@@ -148,52 +152,68 @@ export default function Dashboard() {
 
         {/* ================= TAB 1: PREDICT ================= */}
         {activeTab === 'predict' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
-            <div className="lg:col-span-2 bg-[#111827] border border-slate-800 rounded-xl p-6">
-              <h2 className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-4 border-b border-slate-800 pb-3">Fase Deployment — Prototipe Sistem</h2>
-              <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
+            <div className="lg:col-span-2 bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[50px] pointer-events-none" />
+              <h2 className="text-[10px] font-bold tracking-[0.2em] text-cyan-500 uppercase mb-5 flex items-center gap-2">
+                <Activity size={14} /> System Input Parameter
+              </h2>
+              
+              <div className="space-y-4 relative z-10">
                 <textarea
-                  className="w-full bg-[#0f172a] border border-slate-700 rounded-lg p-4 text-slate-200 focus:border-indigo-500 outline-none"
+                  className="w-full bg-[#050505]/50 border border-white/10 rounded-xl p-5 text-slate-200 text-sm font-mono focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 outline-none transition-all resize-none shadow-inner"
                   rows={3}
-                  placeholder="Deskripsi peristiwa geopolitik (e.g. Russia cuts oil exports...)"
+                  placeholder="> Input geopolitical event parameters here..."
                   value={eventText}
                   onChange={(e) => setEventText(e.target.value)}
                 />
-                <button onClick={handlePredict} disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-lg font-bold transition-all disabled:opacity-50 flex justify-center gap-2">
-                  {loading ? 'Menjalankan Inferensi...' : 'Jalankan Inferensi →'} <Activity size={18} />
+                <button onClick={handlePredict} disabled={loading} className="w-full relative group overflow-hidden bg-white/[0.05] border border-white/10 hover:border-cyan-500/50 text-white py-3.5 rounded-xl font-bold transition-all disabled:opacity-50 flex justify-center items-center gap-2">
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-violet-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="relative z-10 flex items-center gap-2">{loading ? 'Processing Sequence...' : 'Execute Model Inference'} <Zap size={16} className={loading ? "animate-pulse text-cyan-400" : "text-cyan-400"} /></span>
                 </button>
               </div>
 
-              {/* TERMINAL UI REPORT */}
+              {/* CYBERPUNK TERMINAL UI */}
               {data && (
-                <div className="mt-8 bg-[#0a0e1a] border border-slate-800 rounded-lg p-6 font-mono text-sm leading-relaxed">
-                  <div className="text-indigo-500 font-bold mb-4">════════════════════════════════════════════════════════════<br/>LAPORAN PREDIKSI HARGA WTI<br/>════════════════════════════════════════════════════════════</div>
-                  <div className="grid grid-cols-[130px_1fr] gap-2 mb-4">
-                    <span className="text-slate-500">Tanggal Ref</span> <span className="text-slate-100">: {data.last_date}</span>
-                    <span className="text-slate-500">Peristiwa</span> <span className="text-slate-100">: {eventText || '(Tidak ada)'}</span>
-                    <span className="text-slate-500">Sentimen</span> 
-                    <span>: {data.sentiment.positive > data.sentiment.negative ? '🟢 POSITIVE' : data.sentiment.negative > data.sentiment.positive ? '🔴 NEGATIVE' : '🟡 NEUTRAL'}</span>
+                <div className="mt-8 bg-[#050505] border border-cyan-500/20 rounded-xl p-6 font-mono text-xs leading-relaxed relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyan-500 to-violet-500" />
+                  
+                  <div className="flex justify-between items-center mb-4 border-b border-white/[0.05] pb-2">
+                    <span className="text-cyan-500 font-bold">sys.stdout</span>
+                    <span className="text-slate-600">v2.0.4</span>
                   </div>
-                  <div className="pl-[130px] mb-6 text-slate-400 text-xs space-y-1">
-                    <div>Positive : {data.sentiment.positive.toFixed(4)}</div>
-                    <div>Negative : {data.sentiment.negative.toFixed(4)}</div>
-                    <div>Neutral  : {data.sentiment.neutral.toFixed(4)}</div>
+
+                  <div className="grid grid-cols-[120px_1fr] gap-y-2 mb-4">
+                    <span className="text-slate-500">Ref_Date</span> <span className="text-cyan-100">{data.last_date}</span>
+                    <span className="text-slate-500">Event_Str</span> <span className="text-cyan-100">"{eventText || 'NULL'}"</span>
+                    <span className="text-slate-500">NLP_Vector</span> 
+                    <span className={data.sentiment.positive > data.sentiment.negative ? 'text-emerald-400' : data.sentiment.negative > data.sentiment.positive ? 'text-pink-400' : 'text-amber-400'}>
+                      [{data.sentiment.positive > data.sentiment.negative ? 'POSITIVE' : data.sentiment.negative > data.sentiment.positive ? 'NEGATIVE' : 'NEUTRAL'}]
+                    </span>
                   </div>
-                  <div className="text-lg mb-4">
-                    <span className="text-slate-500">{'>'} Prediksi (H+1): </span>
-                    <span className="text-green-400 font-bold">USD {data.predictions['Hybrid FinBERT-LSTM'].toFixed(2)} / barel</span>
+                  
+                  <div className="pl-[120px] mb-6 text-slate-500 space-y-1">
+                    <div>├── pos_weight : {data.sentiment.positive.toFixed(4)}</div>
+                    <div>├── neg_weight : {data.sentiment.negative.toFixed(4)}</div>
+                    <div>└── neu_weight : {data.sentiment.neutral.toFixed(4)}</div>
                   </div>
-                  <div className="text-indigo-500 font-bold mt-4">════════════════════════════════════════════════════════════</div>
+                  
+                  <div className="p-4 bg-white/[0.02] border border-white/[0.05] rounded-lg">
+                    <div className="text-slate-400 mb-1">{'>'} Projected_Value (t+1):</div>
+                    <div className="text-3xl text-cyan-400 font-black drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                      USD {data.predictions['Hybrid FinBERT-LSTM'].toFixed(2)}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="bg-[#111827] border border-slate-800 rounded-xl p-6">
-              <h2 className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-4 border-b border-slate-800 pb-3">Contoh Peristiwa</h2>
-              <div className="space-y-2">
+            <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6">
+              <h2 className="text-[10px] font-bold tracking-[0.2em] text-violet-400 uppercase mb-5">Scenario Presets</h2>
+              <div className="space-y-3">
                 {["Russia cuts oil exports by 10%", "OPEC announces production cuts", "US-Iran tensions escalate in Strait of Hormuz"].map((ex, i) => (
-                  <button key={i} onClick={() => setEventText(ex)} className="w-full text-left p-3 text-xs bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-lg text-slate-300 transition-colors">
-                    {ex}
+                  <button key={i} onClick={() => setEventText(ex)} className="w-full text-left p-4 text-xs font-mono bg-[#050505]/50 border border-white/[0.05] hover:border-violet-500/50 hover:bg-violet-500/5 rounded-xl text-slate-400 hover:text-violet-200 transition-all group">
+                    <span className="text-violet-500 opacity-50 group-hover:opacity-100 mr-2">{'>'}</span> {ex}
                   </button>
                 ))}
               </div>
@@ -203,124 +223,134 @@ export default function Dashboard() {
 
         {/* ================= TAB 2: HISTORICAL DATA ================= */}
         {activeTab === 'history' && data && (
-          <div className="space-y-6 animate-in fade-in">
-            <div className="bg-[#111827] border border-slate-800 rounded-xl p-6">
-              <div className="flex flex-wrap justify-between items-center mb-6 border-b border-slate-800 pb-4">
-                <h2 className="text-xs font-bold tracking-widest text-slate-500 uppercase">WTI Price History</h2>
-                <div className="flex gap-4">
-                  <select className="bg-slate-900 border border-slate-700 text-xs rounded px-3 py-1" value={period} onChange={e => setPeriod(Number(e.target.value))}>
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6">
+              <div className="flex flex-wrap justify-between items-center mb-8 border-b border-white/[0.05] pb-4">
+                <h2 className="text-[10px] font-bold tracking-[0.2em] text-cyan-400 uppercase">Market Telemetry</h2>
+                <div className="flex gap-4 items-center">
+                  <select className="bg-[#050505] border border-white/10 text-xs text-cyan-400 rounded-lg px-3 py-1.5 outline-none focus:border-cyan-500" value={period} onChange={e => setPeriod(Number(e.target.value))}>
                     <option value={63}>3 Months</option>
                     <option value={126}>6 Months</option>
                     <option value={252}>1 Year</option>
                     <option value={504}>2 Years</option>
                     <option value={1260}>5 Years</option>
                   </select>
-                  <label className="flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" checked={showBrent} onChange={e => setShowBrent(e.target.checked)} /> Brent</label>
-                  <label className="flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" checked={showVix} onChange={e => setShowVix(e.target.checked)} /> VIX</label>
+                  <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer hover:text-white transition-colors"><input type="checkbox" className="accent-pink-500" checked={showBrent} onChange={e => setShowBrent(e.target.checked)} /> Brent</label>
+                  <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer hover:text-white transition-colors"><input type="checkbox" className="accent-violet-500" checked={showVix} onChange={e => setShowVix(e.target.checked)} /> VIX</label>
                 </div>
               </div>
-              <div className="h-80">
+              <div className="h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={histData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <AreaChart data={histData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorWti" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                        <stop offset="5%" stopColor={colors.hybrid} stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor={colors.hybrid} stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickFormatter={(val) => val.substring(0,7)} />
-                    <YAxis yAxisId="left" domain={['auto', 'auto']} stroke="#64748b" fontSize={10} />
-                    {showVix && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} stroke="#22d3ee" fontSize={10} />}
-                    <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} itemStyle={{ fontFamily: 'monospace', fontSize: '12px' }} />
-                    <Area yAxisId="left" type="monotone" dataKey="wti_price" stroke="#6366f1" fillOpacity={1} fill="url(#colorWti)" name="WTI" />
-                    {showBrent && <Line yAxisId="left" type="monotone" dataKey="brent_price" stroke="#f97316" dot={false} strokeWidth={1.5} name="Brent" />}
-                    {showVix && <Line yAxisId="right" type="monotone" dataKey="vix" stroke="#22d3ee" dot={false} strokeWidth={1} name="VIX" opacity={0.6}/>}
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
+                    <XAxis dataKey="date" stroke="#475569" fontSize={10} tickFormatter={(val) => val.substring(0,7)} tickLine={false} axisLine={false} />
+                    <YAxis yAxisId="left" domain={['auto', 'auto']} stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
+                    {showVix && <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} stroke={colors.lstm} fontSize={10} tickLine={false} axisLine={false} />}
+                    <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(5,5,5,0.9)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} itemStyle={{ fontFamily: 'monospace', fontSize: '12px' }} />
+                    <Area yAxisId="left" type="monotone" dataKey="wti_price" stroke={colors.hybrid} strokeWidth={2} fillOpacity={1} fill="url(#colorWti)" name="WTI" />
+                    {showBrent && <Line yAxisId="left" type="monotone" dataKey="brent_price" stroke={colors.arima} dot={false} strokeWidth={2} name="Brent" />}
+                    {showVix && <Line yAxisId="right" type="monotone" dataKey="vix" stroke={colors.lstm} dot={false} strokeWidth={2} name="VIX" opacity={0.8}/>}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="bg-[#111827] border border-slate-800 rounded-xl p-6">
-              <h2 className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-6 border-b border-slate-800 pb-4">Daily Return Distribution</h2>
-              <div className="h-48">
+            <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6">
+              <h2 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-6 border-b border-white/[0.05] pb-4">Return Distribution Analysis</h2>
+              <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={returnDistData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                    <XAxis dataKey="range" stroke="#64748b" fontSize={10} />
-                    <YAxis stroke="#64748b" fontSize={10} />
-                    <RechartsTooltip cursor={{fill: '#1e293b'}} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} />
-                    <Bar dataKey="count" fill="#6366f1" radius={[2, 2, 0, 0]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
+                    <XAxis dataKey="range" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
+                    <RechartsTooltip cursor={{fill: 'rgba(255,255,255,0.02)'}} contentStyle={{ backgroundColor: 'rgba(5,5,5,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                    <Bar dataKey="count" fill={colors.hybrid} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
         )}
-        {!data && activeTab === 'history' && <div className="text-slate-500 text-center py-10">Silakan jalankan inferensi di Tab Predict terlebih dahulu untuk memuat data.</div>}
 
         {/* ================= TAB 3: PERFORMANCE ================= */}
         {activeTab === 'performance' && data && (
-          <div className="space-y-6 animate-in fade-in">
+          <div className="space-y-6 animate-in fade-in duration-500">
              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(data.metrics).map(([mname, mvals]: any) => (
-                <div key={mname} className={`bg-[#111827] border ${mname === 'Hybrid FinBERT-LSTM' ? 'border-orange-500' : 'border-slate-800'} p-4 rounded-xl relative`}>
-                  {mname === 'Hybrid FinBERT-LSTM' && <span className="absolute -top-2 right-3 bg-orange-500 text-white text-[9px] px-2 rounded-full font-bold">★ BEST</span>}
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{mname}</h3>
-                  <div className="text-xl font-bold font-mono text-white mb-1">MAE {mvals.MAE.toFixed(3)}</div>
-                  <div className="text-sm font-mono text-slate-400">R² {mvals.R2.toFixed(3)}</div>
-                </div>
-              ))}
+              {Object.entries(data.metrics).map(([mname, mvals]: any) => {
+                const isBest = mname === 'Hybrid FinBERT-LSTM';
+                return (
+                  <div key={mname} className={`bg-white/[0.02] border ${isBest ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)]' : 'border-white/[0.05]'} p-5 rounded-2xl relative backdrop-blur-md transition-all hover:bg-white/[0.04]`}>
+                    {isBest && <span className="absolute -top-3 right-4 bg-cyan-500 text-[#030712] text-[9px] px-3 py-1 rounded-full font-black tracking-widest shadow-[0_0_10px_rgba(6,182,212,0.8)]">OPTIMAL</span>}
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{mname}</h3>
+                    <div className={`text-2xl font-black font-mono mb-1 ${isBest ? 'text-cyan-400' : 'text-slate-200'}`}>{mvals.MAE.toFixed(3)}</div>
+                    <div className="text-[10px] font-mono text-slate-500 uppercase">MAE Error Rate</div>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-[#111827] border border-slate-800 rounded-xl p-6">
-                <h2 className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-6">Model Capability Radar</h2>
-                <div className="h-64">
+              <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6">
+                <h2 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-6">Capability Radar Matrix</h2>
+                <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                      <PolarGrid stroke="#1e293b" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                      <PolarGrid stroke={colors.grid} />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }} />
                       <PolarRadiusAxis angle={30} domain={[0, 1]} tick={false} axisLine={false} />
-                      <Radar name="Hybrid" dataKey="Hybrid" stroke="#6366f1" fill="#6366f1" fillOpacity={0.2} />
-                      <Radar name="LSTM" dataKey="LSTM" stroke="#f97316" fill="transparent" />
-                      <Radar name="ARIMA" dataKey="ARIMA" stroke="#22d3ee" fill="transparent" />
-                      <Radar name="SVR" dataKey="SVR" stroke="#a78bfa" fill="transparent" />
-                      <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} />
+                      <Radar name="Hybrid" dataKey="Hybrid" stroke={colors.hybrid} strokeWidth={2} fill={colors.hybrid} fillOpacity={0.3} />
+                      <Radar name="LSTM" dataKey="LSTM" stroke={colors.lstm} strokeWidth={2} fill="transparent" />
+                      <Radar name="ARIMA" dataKey="ARIMA" stroke={colors.arima} strokeWidth={2} fill="transparent" />
+                      <Radar name="SVR" dataKey="SVR" stroke={colors.svr} strokeWidth={2} fill="transparent" />
+                      <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(5,5,5,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              <div className="bg-[#111827] border border-slate-800 rounded-xl p-6">
-                <h2 className="text-xs font-bold tracking-widest text-slate-500 uppercase mb-6">Error Comparison (MAE)</h2>
-                <div className="h-64">
+              <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6">
+                <h2 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-6">Absolute Error Topology</h2>
+                <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[{ name: 'Mean Absolute Error', Hybrid: data.metrics['Hybrid FinBERT-LSTM'].MAE, LSTM: data.metrics['LSTM (no sentiment)'].MAE, ARIMA: data.metrics['ARIMA'].MAE, SVR: data.metrics['SVR'].MAE }]}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                      <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                      <YAxis stroke="#64748b" fontSize={11} />
-                      <RechartsTooltip cursor={{fill: '#1e293b'}} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} />
-                      <Bar dataKey="Hybrid" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="LSTM" fill="#f97316" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="ARIMA" fill="#22d3ee" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="SVR" fill="#a78bfa" radius={[4, 4, 0, 0]} />
+                    <BarChart data={[{ name: 'MAE Assessment', Hybrid: data.metrics['Hybrid FinBERT-LSTM'].MAE, LSTM: data.metrics['LSTM (no sentiment)'].MAE, ARIMA: data.metrics['ARIMA'].MAE, SVR: data.metrics['SVR'].MAE }]}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
+                      <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
+                      <RechartsTooltip cursor={{fill: 'rgba(255,255,255,0.02)'}} contentStyle={{ backgroundColor: 'rgba(5,5,5,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                      <Bar dataKey="Hybrid" fill={colors.hybrid} radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="LSTM" fill={colors.lstm} radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="ARIMA" fill={colors.arima} radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="SVR" fill={colors.svr} radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             </div>
             
-            <div className="bg-green-900/20 border border-green-500/30 p-4 rounded-lg flex gap-3 items-start">
-              <ShieldAlert className="text-green-400 mt-1" size={20} />
-              <div className="text-sm text-green-200">
-                <strong className="text-green-400 block mb-1">Kesimpulan Riset</strong>
-                Mengintegrasikan sentimen geopolitik (FinBERT) ke dalam model sekuensial (LSTM) memberikan peningkatan akurasi yang terukur. Model Hybrid mencapai MAE terendah dan R² tertinggi pada *test set*, mengonfirmasi hipotesis penelitian ini.
+            <div className="bg-cyan-950/30 border border-cyan-500/30 p-5 rounded-2xl flex gap-4 items-start relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500" />
+              <ShieldAlert className="text-cyan-400 mt-0.5 shrink-0" size={24} />
+              <div className="text-sm text-cyan-100/70 leading-relaxed">
+                <strong className="text-cyan-400 block mb-1.5 tracking-wider text-[11px] uppercase">Riset Kesimpulan Valid</strong>
+                Mengintegrasikan NLP embeddings (FinBERT) ke dalam model <i>sequence</i> (LSTM) mendemonstrasikan supremasi komputasi. Varian Hybrid meminimalkan fungsi <i>loss</i> absolut (MAE) secara optimal dibandingkan metode reduksi standar.
               </div>
             </div>
           </div>
         )}
-        {!data && activeTab === 'performance' && <div className="text-slate-500 text-center py-10">Silakan jalankan inferensi di Tab Predict terlebih dahulu untuk memuat metrik.</div>}
+        
+        {/* Empty States */}
+        {!data && activeTab !== 'predict' && (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.01]">
+            <Database size={32} className="mb-4 opacity-50" />
+            <p className="text-sm">Silakan eksekusi model di tab Inference terlebih dahulu.</p>
+          </div>
+        )}
 
       </div>
     </div>
