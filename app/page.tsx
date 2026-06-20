@@ -188,11 +188,11 @@ export default function Dashboard() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Zap className="text-cyan-400 w-4 h-4" />
-                <p className="text-cyan-400 text-[10px] font-bold tracking-[0.3em] uppercase">Core Engine Active</p>
+                <p className="text-cyan-400 text-[10px] font-bold tracking-[0.3em] uppercase">Research Dashboard</p>
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500 mb-4 flex items-center gap-3">
                 <Droplet className="text-cyan-500 w-10 h-10 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]" /> 
-                WTI Crude <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">Nexus</span>
+                WTI Crude <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">Prediction</span>
               </h1>
               <p className="text-slate-400 max-w-2xl text-sm leading-relaxed">
                 Advanced forecasting matrix deploying Hybrid FinBERT-LSTM architectures against deterministic statistical baselines (ARIMA, SVR).
