@@ -5,7 +5,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Area, AreaChart 
 } from 'recharts';
-import { Activity, Droplet, Info, BarChart3, Database, ShieldAlert, Cpu, Terminal, Zap, TrendingUp } from 'lucide-react';
+import { Activity, Droplet, Database, ShieldAlert, Cpu, Terminal, Zap, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
   const [eventText, setEventText] = useState('');
@@ -21,7 +21,7 @@ export default function Dashboard() {
   const [showBrent, setShowBrent] = useState(true);
   const [showVix, setShowVix] = useState(false);
 
-  // GANTI DENGAN URL HUGGING FACE ANDA JIKA PERLU
+  // URL API Hugging Face Anda
   const API_URL = 'https://ikhwannt-wti-prediction-api.hf.space/api/predict';
 
   const handlePredict = async () => {
@@ -64,40 +64,94 @@ export default function Dashboard() {
     }));
   }, [histData]);
 
+  // Data Radar Chart dengan nilai asli disisipkan untuk Custom Tooltip
   const radarData = useMemo(() => {
     if(!data) return [];
     const metrics = data.metrics;
+    const maxErr = 7; 
+    const maxMape = 10;
+
     return [
-      { subject: 'MAE (inv)', Hybrid: 1-(metrics['Hybrid FinBERT-LSTM'].MAE/5), LSTM: 1-(metrics['LSTM (no sentiment)'].MAE/5), ARIMA: 1-(metrics['ARIMA'].MAE/5), SVR: 1-(metrics['SVR'].MAE/5) },
-      { subject: 'RMSE (inv)', Hybrid: 1-(metrics['Hybrid FinBERT-LSTM'].RMSE/5), LSTM: 1-(metrics['LSTM (no sentiment)'].RMSE/5), ARIMA: 1-(metrics['ARIMA'].RMSE/5), SVR: 1-(metrics['SVR'].RMSE/5) },
-      { subject: 'MAPE (inv)', Hybrid: 1-(metrics['Hybrid FinBERT-LSTM'].MAPE/10), LSTM: 1-(metrics['LSTM (no sentiment)'].MAPE/10), ARIMA: 1-(metrics['ARIMA'].MAPE/10), SVR: 1-(metrics['SVR'].MAPE/10) },
-      { subject: 'R²', Hybrid: metrics['Hybrid FinBERT-LSTM'].R2, LSTM: metrics['LSTM (no sentiment)'].R2, ARIMA: metrics['ARIMA'].R2, SVR: metrics['SVR'].R2 },
+      { 
+        subject: 'MAE (inv)', 
+        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM'].MAE / maxErr)), 
+        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)'].MAE / maxErr)), 
+        ARIMA: Math.max(0, 1 - (metrics['ARIMA'].MAE / maxErr)), 
+        SVR: Math.max(0, 1 - (metrics['SVR'].MAE / maxErr)),
+        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM'].MAE, LSTM: metrics['LSTM (no sentiment)'].MAE, ARIMA: metrics['ARIMA'].MAE, SVR: metrics['SVR'].MAE }
+      },
+      { 
+        subject: 'RMSE (inv)', 
+        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM'].RMSE / maxErr)), 
+        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)'].RMSE / maxErr)), 
+        ARIMA: Math.max(0, 1 - (metrics['ARIMA'].RMSE / maxErr)), 
+        SVR: Math.max(0, 1 - (metrics['SVR'].RMSE / maxErr)),
+        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM'].RMSE, LSTM: metrics['LSTM (no sentiment)'].RMSE, ARIMA: metrics['ARIMA'].RMSE, SVR: metrics['SVR'].RMSE }
+      },
+      { 
+        subject: 'MAPE (inv)', 
+        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM'].MAPE / maxMape)), 
+        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)'].MAPE / maxMape)), 
+        ARIMA: Math.max(0, 1 - (metrics['ARIMA'].MAPE / maxMape)), 
+        SVR: Math.max(0, 1 - (metrics['SVR'].MAPE / maxMape)),
+        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM'].MAPE, LSTM: metrics['LSTM (no sentiment)'].MAPE, ARIMA: metrics['ARIMA'].MAPE, SVR: metrics['SVR'].MAPE }
+      },
+      { 
+        subject: 'R²', 
+        Hybrid: metrics['Hybrid FinBERT-LSTM'].R2, 
+        LSTM: metrics['LSTM (no sentiment)'].R2, 
+        ARIMA: metrics['ARIMA'].R2, 
+        SVR: metrics['SVR'].R2,
+        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM'].R2, LSTM: metrics['LSTM (no sentiment)'].R2, ARIMA: metrics['ARIMA'].R2, SVR: metrics['SVR'].R2 }
+      },
     ];
   }, [data]);
 
-  // Simulasi Data Test Set untuk Grafik Perbandingan Model (seperti gambar)
-  // Memanfaatkan MAE base dari metrics untuk mensimulasikan kurva prediksi
+  // Simulasi Data Test Set untuk Grafik Perbandingan Model
   const testSetData = useMemo(() => {
     if (!data) return [];
-    const slice = data.history.slice(-252); // Mengambil 1 tahun terakhir untuk test set view
+    const slice = data.history.slice(-252); 
     let currentArima = slice[0]?.wti_price;
 
     return slice.map((d: any, i: number) => {
       const actual = d.wti_price;
-      
-      // Simulasi karakteristik model ARIMA (berbentuk tangga/step)
       if (i % 14 === 0) currentArima = actual + (Math.random() * 4 - 2);
 
       return {
-        date: d.date.substring(0, 7), // YYYY-MM
+        date: d.date.substring(0, 7), 
         Actual: actual,
-        Hybrid: actual * (1 + (Math.random() * 0.03 - 0.015)) - 0.5, // Fit ketat
-        LSTM: actual * (1 + (Math.random() * 0.05 - 0.025)) - 2.0,   // Lagged
-        ARIMA: currentArima,                                         // Step-wise
-        SVR: actual * (1 + (Math.random() * 0.015 - 0.007))          // Sangat ketat
+        Hybrid: actual * (1 + (Math.random() * 0.03 - 0.015)) - 0.5,
+        LSTM: actual * (1 + (Math.random() * 0.05 - 0.025)) - 2.0, 
+        ARIMA: currentArima, 
+        SVR: actual * (1 + (Math.random() * 0.015 - 0.007)) 
       };
     });
   }, [data]);
+
+  // Custom Tooltip Radar Chart
+  const CustomRadarTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#050505]/95 border border-white/10 p-4 rounded-xl backdrop-blur-md shadow-2xl">
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3 border-b border-white/10 pb-2">
+            Nilai Asli — {label.replace(' (inv)', '')}
+          </p>
+          <div className="space-y-2">
+            {payload.map((entry: any, index: number) => {
+              const rawValue = entry.payload.raw[entry.name];
+              return (
+                <div key={index} className="flex justify-between items-center gap-6 text-xs font-mono">
+                  <span style={{ color: entry.color }}>{entry.name}</span>
+                  <span className="text-white font-bold">{rawValue.toFixed(3)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   // Futuristic Color Palette
   const colors = {
@@ -198,35 +252,73 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* CYBERPUNK TERMINAL UI */}
+              {/* REFINED FUTURISTIC OUTPUT UI */}
               {data && (
-                <div className="mt-8 bg-[#050505] border border-cyan-500/20 rounded-xl p-6 font-mono text-xs leading-relaxed relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyan-500 to-violet-500" />
+                <div className="mt-8 relative bg-white/[0.02] border border-cyan-500/30 backdrop-blur-md rounded-2xl p-6 overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.1)] group transition-all duration-500 hover:border-cyan-400/50">
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/10 blur-[50px] pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
                   
-                  <div className="flex justify-between items-center mb-4 border-b border-white/[0.05] pb-2">
-                    <span className="text-cyan-500 font-bold">sys.stdout</span>
-                    <span className="text-slate-600">v2.0.4</span>
+                  <div className="flex items-center gap-3 mb-6 border-b border-white/[0.05] pb-4">
+                    <div className="p-1.5 bg-cyan-500/20 rounded-md">
+                      <Activity className="text-cyan-400 w-4 h-4" />
+                    </div>
+                    <h3 className="text-xs font-bold tracking-[0.2em] text-cyan-400 uppercase">Inference Output Analytics</h3>
                   </div>
 
-                  <div className="grid grid-cols-[120px_1fr] gap-y-2 mb-4">
-                    <span className="text-slate-500">Ref_Date</span> <span className="text-cyan-100">{data.last_date}</span>
-                    <span className="text-slate-500">Event_Str</span> <span className="text-cyan-100">"{eventText || 'NULL'}"</span>
-                    <span className="text-slate-500">NLP_Vector</span> 
-                    <span className={data.sentiment.positive > data.sentiment.negative ? 'text-emerald-400' : data.sentiment.negative > data.sentiment.positive ? 'text-pink-400' : 'text-amber-400'}>
-                      [{data.sentiment.positive > data.sentiment.negative ? 'POSITIVE' : data.sentiment.negative > data.sentiment.positive ? 'NEGATIVE' : 'NEUTRAL'}]
-                    </span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-5">
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-[0.15em] mb-1.5">Reference Date</p>
+                        <p className="text-sm text-slate-200 font-mono bg-[#050505]/50 inline-block px-3 py-1 rounded-md border border-white/5">{data.last_date}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-[0.15em] mb-1.5">Scenario Processed</p>
+                        <p className="text-sm text-slate-300 italic border-l-2 border-cyan-500/50 pl-3 py-1">
+                          {eventText ? `"${eventText}"` : "Historical Baseline Data (No Event)"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#050505]/60 rounded-xl p-5 border border-white/[0.03] shadow-inner">
+                      <div className="flex justify-between items-center mb-4">
+                        <p className="text-[10px] text-slate-400 uppercase tracking-widest">FinBERT Vector</p>
+                        <span className={`text-[9px] px-2.5 py-1 rounded-full font-black tracking-widest shadow-sm ${
+                          data.sentiment.positive > data.sentiment.negative ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 
+                          data.sentiment.negative > data.sentiment.positive ? 'bg-pink-500/10 text-pink-400 border border-pink-500/30' : 
+                          'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {data.sentiment.positive > data.sentiment.negative ? 'POSITIVE' : data.sentiment.negative > data.sentiment.positive ? 'NEGATIVE' : 'NEUTRAL'}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {[
+                          { label: 'Positive', val: data.sentiment.positive, color: 'bg-emerald-400', track: 'bg-emerald-950/30' },
+                          { label: 'Negative', val: data.sentiment.negative, color: 'bg-pink-400', track: 'bg-pink-950/30' },
+                          { label: 'Neutral', val: data.sentiment.neutral, color: 'bg-amber-400', track: 'bg-amber-950/30' }
+                        ].map((s, idx) => (
+                          <div key={idx} className="flex items-center gap-3">
+                            <span className="text-[10px] w-14 text-slate-500 uppercase tracking-wider">{s.label}</span>
+                            <div className={`flex-1 h-1.5 ${s.track} rounded-full overflow-hidden`}>
+                              <div className={`h-full ${s.color} shadow-[0_0_8px_currentColor]`} style={{ width: `${s.val * 100}%` }} />
+                            </div>
+                            <span className="text-[10px] font-mono w-10 text-right text-slate-400">{(s.val * 100).toFixed(1)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="pl-[120px] mb-6 text-slate-500 space-y-1">
-                    <div>├── pos_weight : {data.sentiment.positive.toFixed(4)}</div>
-                    <div>├── neg_weight : {data.sentiment.negative.toFixed(4)}</div>
-                    <div>└── neu_weight : {data.sentiment.neutral.toFixed(4)}</div>
-                  </div>
-                  
-                  <div className="p-4 bg-white/[0.02] border border-white/[0.05] rounded-lg">
-                    <div className="text-slate-400 mb-1">{'>'} Projected_Value (t+1):</div>
-                    <div className="text-3xl text-cyan-400 font-black drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
-                      USD {data.predictions['Hybrid FinBERT-LSTM'].toFixed(2)}
+
+                  <div className="mt-6 pt-6 border-t border-white/[0.05] flex flex-col items-center justify-center relative">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+                    <p className="text-[10px] text-cyan-400/80 uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
+                      <TrendingUp size={12} /> Projected WTI Price (t+1)
+                    </p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-xl text-cyan-500/70 font-light tracking-widest">USD</span>
+                      <span className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-cyan-100 to-cyan-500 drop-shadow-[0_0_25px_rgba(6,182,212,0.4)] tracking-tight">
+                        {data.predictions['Hybrid FinBERT-LSTM'].toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -336,7 +428,7 @@ export default function Dashboard() {
                       <Radar name="LSTM" dataKey="LSTM" stroke={colors.lstm} strokeWidth={2} fill="transparent" />
                       <Radar name="ARIMA" dataKey="ARIMA" stroke={colors.arima} strokeWidth={2} fill="transparent" />
                       <Radar name="SVR" dataKey="SVR" stroke={colors.svr} strokeWidth={2} fill="transparent" />
-                      <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(5,5,5,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                      <RechartsTooltip content={<CustomRadarTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
@@ -371,7 +463,6 @@ export default function Dashboard() {
                 <span className="text-[10px] text-slate-500 font-mono">1 Year Analysis</span>
               </div>
               
-              {/* Loop untuk menghasilkan 4 grafik berderet */}
               {[
                 { key: 'Hybrid', title: 'Prediksi vs Aktual — Hybrid FinBERT-LSTM', color: colors.hybrid },
                 { key: 'LSTM', title: 'Prediksi vs Aktual — LSTM (tanpa sentimen)', color: colors.lstm },
