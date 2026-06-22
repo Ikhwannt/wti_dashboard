@@ -578,8 +578,8 @@ export default function Dashboard() {
               <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500" />
               <ShieldAlert className="text-cyan-400 mt-0.5 shrink-0" size={24} />
               <div className="text-sm text-cyan-100/70 leading-relaxed">
-                <strong className="text-cyan-400 block mb-1.5 tracking-wider text-[11px] uppercase">Riset Kesimpulan Valid</strong>
-                Mengintegrasikan NLP embeddings (FinBERT) ke dalam model <i>sequence</i> (LSTM) mendemonstrasikan supremasi komputasi. Varian Hybrid meminimalkan fungsi <i>loss</i> absolut (MAE) secara optimal dan secara visual paling selaras dengan deviasi harga aktual.
+                <strong className="text-cyan-400 block mb-1.5 tracking-wider text-[11px] uppercase">Riset Kesimpulan</strong>
+                Mengintegrasikan NLP embeddings (FinBERT) ke dalam model <i>sequence</i> (LSTM) mendemonstrasikan supremasi komputasi. Varian Hybrid meminimalkan fungsi <i>loss</i> absolut (MAE) secara optimal dibandingkan dengan varian LSTM tanpa NLP (FinBERT).
               </div>
             </div>
           </div>
