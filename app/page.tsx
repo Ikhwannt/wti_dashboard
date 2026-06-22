@@ -172,6 +172,18 @@ export default function Dashboard() {
     grid: "rgba(255,255,255,0.05)"
   };
 
+  // Preset Event dari CSV
+  const scenarioPresets = [
+    "Russia invades Ukraine",
+    "Saudi Aramco Abqaiq oil facility attack",
+    "Saudi-Russia oil price war begins",
+    "WTI crude prices turn negative",
+    "OPEC+ announces surprise production cuts",
+    "Red Sea shipping attacks escalate",
+    "Israel-Hamas war begins",
+    "US kills Iranian General Qasem Soleimani"
+  ];
+
   return (
     <div className="min-h-screen bg-[#030712] text-slate-300 p-4 md:p-8 font-sans selection:bg-cyan-500/30 relative overflow-hidden">
       
@@ -334,15 +346,32 @@ export default function Dashboard() {
               )}
             </div>
 
-            <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6">
-              <h2 className="text-[10px] font-bold tracking-[0.2em] text-violet-400 uppercase mb-5">Scenario Presets</h2>
-              <div className="space-y-3">
-                {["Russia cuts oil exports by 10%", "OPEC announces production cuts", "US-Iran tensions escalate in Strait of Hormuz"].map((ex, i) => (
+            {/* SCENARIO PRESETS DARI CSV */}
+            <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6 flex flex-col max-h-[500px]">
+              <h2 className="text-[10px] font-bold tracking-[0.2em] text-violet-400 uppercase mb-5 shrink-0">Scenario Presets</h2>
+              <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                {scenarioPresets.map((ex, i) => (
                   <button key={i} onClick={() => setEventText(ex)} className="w-full text-left p-4 text-xs font-mono bg-[#050505]/50 border border-white/[0.05] hover:border-violet-500/50 hover:bg-violet-500/5 rounded-xl text-slate-400 hover:text-violet-200 transition-all group">
                     <span className="text-violet-500 opacity-50 group-hover:opacity-100 mr-2">{'>'}</span> {ex}
                   </button>
                 ))}
               </div>
+              <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                  width: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                  background: rgba(255, 255, 255, 0.02);
+                  border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                  background: rgba(139, 92, 246, 0.3);
+                  border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                  background: rgba(139, 92, 246, 0.6);
+                }
+              `}</style>
             </div>
           </div>
         )}
@@ -408,15 +437,13 @@ export default function Dashboard() {
         {activeTab === 'performance' && data && (
           <div className="space-y-6 animate-in fade-in duration-500">
              
-             {/* STATS MATRIX */}
+             {/* STATS MATRIX (TANPA HIGHLIGHT) */}
              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {Object.entries(data.metrics).map(([mname, mvals]: any) => {
-                const isBest = mname === 'Hybrid FinBERT-LSTM';
                 return (
-                  <div key={mname} className={`bg-white/[0.02] border ${isBest ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.15)]' : 'border-white/[0.05]'} p-5 rounded-2xl relative backdrop-blur-md transition-all hover:bg-white/[0.04]`}>
-                    {isBest && <span className="absolute -top-3 right-4 bg-cyan-500 text-[#030712] text-[9px] px-3 py-1 rounded-full font-black tracking-widest shadow-[0_0_10px_rgba(6,182,212,0.8)]">OPTIMAL</span>}
+                  <div key={mname} className="bg-white/[0.02] border border-white/[0.05] p-5 rounded-2xl relative backdrop-blur-md transition-all hover:bg-white/[0.04]">
                     <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{mname}</h3>
-                    <div className={`text-2xl font-black font-mono mb-1 ${isBest ? 'text-cyan-400' : 'text-slate-200'}`}>{mvals.MAE.toFixed(3)}</div>
+                    <div className="text-2xl font-black font-mono mb-1 text-slate-200">{mvals.MAE.toFixed(3)}</div>
                     <div className="text-[10px] font-mono text-slate-500 uppercase">MAE Error Rate</div>
                   </div>
                 );
