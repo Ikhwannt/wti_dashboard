@@ -304,12 +304,13 @@ export default function Dashboard() {
                       <div className="flex justify-between items-center mb-4">
                         <p className="text-[10px] text-slate-400 uppercase tracking-widest">FinBERT Vector</p>
                         <span className={`text-[9px] px-2.5 py-1 rounded-full font-black tracking-widest shadow-sm ${
-                          data.sentiment.positive > data.sentiment.negative ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 
-                          data.sentiment.negative > data.sentiment.positive ? 'bg-pink-500/10 text-pink-400 border border-pink-500/30' : 
+                          data.sentiment.positive > Math.max(data.sentiment.negative, data.sentiment.neutral) ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 
+                          data.sentiment.negative > Math.max(data.sentiment.positive, data.sentiment.neutral) ? 'bg-pink-500/10 text-pink-400 border border-pink-500/30' : 
                           'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                        }`}>
-                          {data.sentiment.positive > data.sentiment.negative ? 'POSITIVE' : data.sentiment.negative > data.sentiment.positive ? 'NEGATIVE' : 'NEUTRAL'}
-                        </span>
+                      }`}>
+                          {data.sentiment.positive > Math.max(data.sentiment.negative, data.sentiment.neutral) ? 'POSITIVE' : 
+                          data.sentiment.negative > Math.max(data.sentiment.positive, data.sentiment.neutral) ? 'NEGATIVE' : 'NEUTRAL'}
+                      </span>
                       </div>
                       
                       <div className="space-y-3">
