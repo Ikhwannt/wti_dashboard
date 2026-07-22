@@ -22,7 +22,7 @@ export default function Dashboard() {
   const [showBrent, setShowBrent] = useState(true);
   const [showVix, setShowVix] = useState(false);
 
-  // URL API Hugging Face Anda
+  // URL API Hugging Face
   const API_URL = 'https://ikhwannt-wti-prediction-api.hf.space/api/predict';
 
   const handlePredict = async () => {
@@ -158,7 +158,7 @@ export default function Dashboard() {
     return null;
   };
 
-  // Futuristic Color Palette (Tanpa SVR)
+  // Futuristic Color Palette
   const colors = {
     actual: "#94a3b8", // Slate 400
     hybrid: "#06b6d4", // Cyan 500
@@ -268,7 +268,7 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* REFINED FUTURISTIC OUTPUT UI */}
+              {/* REFINED FUTURISTIC OUTPUT UI (T+1, T+7, T+30) */}
               {data && (
                 <div className="mt-8 relative bg-white/[0.02] border border-cyan-500/30 backdrop-blur-md rounded-2xl p-6 overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.1)] group transition-all duration-500 hover:border-cyan-400/50">
                   <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/10 blur-[50px] pointer-events-none" />
@@ -326,16 +326,45 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-white/[0.05] flex flex-col items-center justify-center relative">
+                  <div className="mt-6 pt-6 border-t border-white/[0.05] relative">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
-                    <p className="text-[10px] text-cyan-400/80 uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
-                      <TrendingUp size={12} /> Projected WTI Price (t+1)
+                    <p className="text-[10px] text-cyan-400/80 uppercase tracking-[0.3em] mb-6 flex items-center justify-center gap-2">
+                      <TrendingUp size={12} /> Projected WTI Price Horizon
                     </p>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-xl text-cyan-500/70 font-light tracking-widest">USD</span>
-                      <span className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-cyan-100 to-cyan-500 drop-shadow-[0_0_25px_rgba(6,182,212,0.4)] tracking-tight">
-                        {data.predictions['Hybrid FinBERT-LSTM']?.toFixed(2)}
-                      </span>
+                    
+                    <div className="grid grid-cols-3 gap-2 md:gap-4 divide-x divide-white/[0.05]">
+                      {/* T+1 Day */}
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">t + 1 Day</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-xs text-cyan-500/70 font-light">USD</span>
+                          <span className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-cyan-100 to-cyan-500 drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                            {data.predictions?.['Hybrid FinBERT-LSTM']?.toFixed(2) || '---'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* T+7 Days */}
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">t + 7 Days</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-xs text-cyan-500/70 font-light">USD</span>
+                          <span className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-cyan-100 to-cyan-500 drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                            {data.predictions_7d?.['Hybrid FinBERT-LSTM']?.toFixed(2) || '---'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* T+30 Days */}
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">t + 30 Days</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-xs text-cyan-500/70 font-light">USD</span>
+                          <span className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-cyan-100 to-cyan-500 drop-shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                            {data.predictions_30d?.['Hybrid FinBERT-LSTM']?.toFixed(2) || '---'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
