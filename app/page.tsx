@@ -65,7 +65,6 @@ export default function Dashboard() {
     }));
   }, [histData]);
 
-  // Data Radar Chart (Tanpa SVR)
   const radarData = useMemo(() => {
     if(!data) return [];
     const metrics = data.metrics;
@@ -104,7 +103,6 @@ export default function Dashboard() {
     ];
   }, [data]);
 
-  // Simulasi Data Test Set (Tanpa SVR)
   const testSetData = useMemo(() => {
     if (!data) return [];
     const slice = data.history.slice(-252); 
@@ -124,7 +122,6 @@ export default function Dashboard() {
     });
   }, [data]);
 
-  // Menghitung batas minimum dan maksimum untuk sumbu Scatter Plot
   const scatterDomain = useMemo(() => {
     if (!testSetData || testSetData.length === 0) return [0, 100];
     const minActual = Math.min(...testSetData.map((d: any) => d.Actual));
@@ -132,7 +129,31 @@ export default function Dashboard() {
     return [Math.floor(minActual - 5), Math.ceil(maxActual + 5)];
   }, [testSetData]);
 
-  // Custom Tooltip Radar Chart
+  // --- DATA UNTUK HORIZON CHART (T+1, T+7, T+30) ---
+  const horizonData = useMemo(() => {
+    if (!data) return [];
+    return [
+      { name: 'Current', price: data.last_price },
+      { name: 'T+1 Day', price: data.predictions?.['Hybrid FinBERT-LSTM'] },
+      { name: 'T+7 Days', price: data.predictions_7d?.['Hybrid FinBERT-LSTM'] },
+      { name: 'T+30 Days', price: data.predictions_30d?.['Hybrid FinBERT-LSTM'] }
+    ];
+  }, [data]);
+
+  // Render Indikator Trend (Naik/Turun)
+  const renderTrend = (predicted: number, current: number) => {
+    if (!predicted || !current) return null;
+    const diff = predicted - current;
+    const pct = (diff / current) * 100;
+    const isUp = diff >= 0;
+    
+    return (
+      <div className={`flex items-center gap-1 text-[9px] mt-2 font-mono font-bold px-2.5 py-1 rounded-full bg-[#050505]/80 border shadow-inner ${isUp ? 'text-emerald-400 border-emerald-500/20' : 'text-pink-400 border-pink-500/20'}`}>
+        {isUp ? '▲' : '▼'} {Math.abs(diff).toFixed(2)} ({Math.abs(pct).toFixed(2)}%)
+      </div>
+    );
+  };
+
   const CustomRadarTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -158,16 +179,14 @@ export default function Dashboard() {
     return null;
   };
 
-  // Futuristic Color Palette
   const colors = {
-    actual: "#94a3b8", // Slate 400
-    hybrid: "#06b6d4", // Cyan 500
-    lstm: "#8b5cf6",   // Violet 500
-    arima: "#ec4899",  // Pink 500
+    actual: "#94a3b8", 
+    hybrid: "#06b6d4", 
+    lstm: "#8b5cf6",   
+    arima: "#ec4899",  
     grid: "rgba(255,255,255,0.05)"
   };
 
-  // Preset Event dari CSV
   const scenarioPresets = [
     "Russia invades Ukraine",
     "Saudi Aramco Abqaiq oil facility attack",
@@ -181,8 +200,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-300 p-4 md:p-8 font-sans selection:bg-cyan-500/30 relative overflow-hidden">
-      
-      {/* Background Glow Effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-900/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-900/20 blur-[120px] pointer-events-none" />
 
@@ -326,12 +343,40 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-white/[0.05] relative">
+                  {/* PROJECTED WTI PRICE HORIZON (DI-UPGRADE DENGAN CHART & TREND) */}
+                  <div className="mt-8 pt-6 border-t border-white/[0.05] relative">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
-                    <p className="text-[10px] text-cyan-400/80 uppercase tracking-[0.3em] mb-6 flex items-center justify-center gap-2">
-                      <TrendingUp size={12} /> Projected WTI Price Horizon
-                    </p>
                     
+                    <div className="flex justify-between items-end mb-4 px-2">
+                      <p className="text-[10px] text-cyan-400/80 uppercase tracking-[0.3em] flex items-center gap-2">
+                        <TrendingUp size={12} /> Projected Trajectory Horizon
+                      </p>
+                      <span className="text-[9px] text-slate-500 font-mono">Hybrid FinBERT-LSTM</span>
+                    </div>
+                    
+                    {/* MINI TRAJECTORY AREA CHART */}
+                    <div className="h-24 w-full mb-6">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={horizonData} margin={{ top: 10, right: 35, left: 35, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorTrajectory" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <XAxis dataKey="name" stroke="#475569" fontSize={9} tickLine={false} axisLine={false} />
+                          <YAxis domain={['auto', 'auto']} hide />
+                          <RechartsTooltip 
+                            contentStyle={{ backgroundColor: 'rgba(5,5,5,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} 
+                            itemStyle={{ fontFamily: 'monospace', fontSize: '11px', color: '#06b6d4', fontWeight: 'bold' }}
+                            labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase' }}
+                            formatter={(value: any) => [`$${Number(value).toFixed(2)}`, 'Target Price']}
+                          />
+                          <Area type="monotone" dataKey="price" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorTrajectory)" activeDot={{ r: 4, fill: '#06b6d4', stroke: '#fff' }} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+
                     <div className="grid grid-cols-3 gap-2 md:gap-4 divide-x divide-white/[0.05]">
                       {/* T+1 Day */}
                       <div className="flex flex-col items-center justify-center">
@@ -342,6 +387,7 @@ export default function Dashboard() {
                             {data.predictions?.['Hybrid FinBERT-LSTM']?.toFixed(2) || '---'}
                           </span>
                         </div>
+                        {renderTrend(data.predictions?.['Hybrid FinBERT-LSTM'], data.last_price)}
                       </div>
 
                       {/* T+7 Days */}
@@ -353,6 +399,7 @@ export default function Dashboard() {
                             {data.predictions_7d?.['Hybrid FinBERT-LSTM']?.toFixed(2) || '---'}
                           </span>
                         </div>
+                        {renderTrend(data.predictions_7d?.['Hybrid FinBERT-LSTM'], data.last_price)}
                       </div>
 
                       {/* T+30 Days */}
@@ -364,6 +411,7 @@ export default function Dashboard() {
                             {data.predictions_30d?.['Hybrid FinBERT-LSTM']?.toFixed(2) || '---'}
                           </span>
                         </div>
+                        {renderTrend(data.predictions_30d?.['Hybrid FinBERT-LSTM'], data.last_price)}
                       </div>
                     </div>
                   </div>
