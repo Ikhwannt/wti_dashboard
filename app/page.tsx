@@ -65,7 +65,7 @@ export default function Dashboard() {
     }));
   }, [histData]);
 
-  // Data Radar Chart dengan nilai asli disisipkan untuk Custom Tooltip
+  // Data Radar Chart (Tanpa SVR)
   const radarData = useMemo(() => {
     if(!data) return [];
     const metrics = data.metrics;
@@ -75,40 +75,36 @@ export default function Dashboard() {
     return [
       { 
         subject: 'MAE (inv)', 
-        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM'].MAE / maxErr)), 
-        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)'].MAE / maxErr)), 
-        ARIMA: Math.max(0, 1 - (metrics['ARIMA'].MAE / maxErr)), 
-        SVR: Math.max(0, 1 - (metrics['SVR'].MAE / maxErr)),
-        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM'].MAE, LSTM: metrics['LSTM (no sentiment)'].MAE, ARIMA: metrics['ARIMA'].MAE, SVR: metrics['SVR'].MAE }
+        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM']?.MAE / maxErr)), 
+        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)']?.MAE / maxErr)), 
+        ARIMA: Math.max(0, 1 - (metrics['ARIMA']?.MAE / maxErr)), 
+        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM']?.MAE, LSTM: metrics['LSTM (no sentiment)']?.MAE, ARIMA: metrics['ARIMA']?.MAE }
       },
       { 
         subject: 'RMSE (inv)', 
-        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM'].RMSE / maxErr)), 
-        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)'].RMSE / maxErr)), 
-        ARIMA: Math.max(0, 1 - (metrics['ARIMA'].RMSE / maxErr)), 
-        SVR: Math.max(0, 1 - (metrics['SVR'].RMSE / maxErr)),
-        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM'].RMSE, LSTM: metrics['LSTM (no sentiment)'].RMSE, ARIMA: metrics['ARIMA'].RMSE, SVR: metrics['SVR'].RMSE }
+        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM']?.RMSE / maxErr)), 
+        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)']?.RMSE / maxErr)), 
+        ARIMA: Math.max(0, 1 - (metrics['ARIMA']?.RMSE / maxErr)), 
+        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM']?.RMSE, LSTM: metrics['LSTM (no sentiment)']?.RMSE, ARIMA: metrics['ARIMA']?.RMSE }
       },
       { 
         subject: 'MAPE (inv)', 
-        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM'].MAPE / maxMape)), 
-        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)'].MAPE / maxMape)), 
-        ARIMA: Math.max(0, 1 - (metrics['ARIMA'].MAPE / maxMape)), 
-        SVR: Math.max(0, 1 - (metrics['SVR'].MAPE / maxMape)),
-        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM'].MAPE, LSTM: metrics['LSTM (no sentiment)'].MAPE, ARIMA: metrics['ARIMA'].MAPE, SVR: metrics['SVR'].MAPE }
+        Hybrid: Math.max(0, 1 - (metrics['Hybrid FinBERT-LSTM']?.MAPE / maxMape)), 
+        LSTM: Math.max(0, 1 - (metrics['LSTM (no sentiment)']?.MAPE / maxMape)), 
+        ARIMA: Math.max(0, 1 - (metrics['ARIMA']?.MAPE / maxMape)), 
+        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM']?.MAPE, LSTM: metrics['LSTM (no sentiment)']?.MAPE, ARIMA: metrics['ARIMA']?.MAPE }
       },
       { 
         subject: 'R²', 
-        Hybrid: metrics['Hybrid FinBERT-LSTM'].R2, 
-        LSTM: metrics['LSTM (no sentiment)'].R2, 
-        ARIMA: metrics['ARIMA'].R2, 
-        SVR: metrics['SVR'].R2,
-        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM'].R2, LSTM: metrics['LSTM (no sentiment)'].R2, ARIMA: metrics['ARIMA'].R2, SVR: metrics['SVR'].R2 }
+        Hybrid: metrics['Hybrid FinBERT-LSTM']?.R2, 
+        LSTM: metrics['LSTM (no sentiment)']?.R2, 
+        ARIMA: metrics['ARIMA']?.R2, 
+        raw: { Hybrid: metrics['Hybrid FinBERT-LSTM']?.R2, LSTM: metrics['LSTM (no sentiment)']?.R2, ARIMA: metrics['ARIMA']?.R2 }
       },
     ];
   }, [data]);
 
-  // Simulasi Data Test Set untuk Grafik Perbandingan Model
+  // Simulasi Data Test Set (Tanpa SVR)
   const testSetData = useMemo(() => {
     if (!data) return [];
     const slice = data.history.slice(-252); 
@@ -123,8 +119,7 @@ export default function Dashboard() {
         Actual: actual,
         Hybrid: actual * (1 + (Math.random() * 0.03 - 0.015)) - 0.5,
         LSTM: actual * (1 + (Math.random() * 0.05 - 0.025)) - 2.0, 
-        ARIMA: currentArima, 
-        SVR: actual * (1 + (Math.random() * 0.015 - 0.007)) 
+        ARIMA: currentArima
       };
     });
   }, [data]);
@@ -148,6 +143,7 @@ export default function Dashboard() {
           <div className="space-y-2">
             {payload.map((entry: any, index: number) => {
               const rawValue = entry.payload.raw[entry.name];
+              if (rawValue === undefined) return null;
               return (
                 <div key={index} className="flex justify-between items-center gap-6 text-xs font-mono">
                   <span style={{ color: entry.color }}>{entry.name}</span>
@@ -162,13 +158,12 @@ export default function Dashboard() {
     return null;
   };
 
-  // Futuristic Color Palette
+  // Futuristic Color Palette (Tanpa SVR)
   const colors = {
     actual: "#94a3b8", // Slate 400
     hybrid: "#06b6d4", // Cyan 500
     lstm: "#8b5cf6",   // Violet 500
     arima: "#ec4899",  // Pink 500
-    svr: "#f59e0b",    // Amber 500
     grid: "rgba(255,255,255,0.05)"
   };
 
@@ -207,11 +202,11 @@ export default function Dashboard() {
                 WTI Crude <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">Prediction</span>
               </h1>
               <p className="text-slate-400 max-w-2xl text-sm leading-relaxed">
-                Advanced forecasting matrix deploying Hybrid FinBERT-LSTM architectures against deterministic statistical baselines (ARIMA, SVR).
+                Advanced forecasting matrix deploying Hybrid FinBERT-LSTM architectures against a deterministic statistical baseline (ARIMA).
               </p>
             </div>
             <div className="flex flex-wrap gap-3 md:max-w-xs justify-end">
-              {['FinBERT-LSTM', 'LSTM', 'ARIMA', 'SVR'].map(b => (
+              {['FinBERT-LSTM', 'LSTM', 'ARIMA'].map(b => (
                 <span key={b} className="px-3 py-1 bg-white/[0.03] border border-white/10 text-slate-300 text-[10px] uppercase tracking-wider rounded-md font-mono shadow-[0_0_10px_rgba(255,255,255,0.02)]">{b}</span>
               ))}
             </div>
@@ -307,10 +302,10 @@ export default function Dashboard() {
                           data.sentiment.positive > Math.max(data.sentiment.negative, data.sentiment.neutral) ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 
                           data.sentiment.negative > Math.max(data.sentiment.positive, data.sentiment.neutral) ? 'bg-pink-500/10 text-pink-400 border border-pink-500/30' : 
                           'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                      }`}>
+                        }`}>
                           {data.sentiment.positive > Math.max(data.sentiment.negative, data.sentiment.neutral) ? 'POSITIVE' : 
                           data.sentiment.negative > Math.max(data.sentiment.positive, data.sentiment.neutral) ? 'NEGATIVE' : 'NEUTRAL'}
-                      </span>
+                        </span>
                       </div>
                       
                       <div className="space-y-3">
@@ -339,7 +334,7 @@ export default function Dashboard() {
                     <div className="flex items-baseline gap-2 mt-1">
                       <span className="text-xl text-cyan-500/70 font-light tracking-widest">USD</span>
                       <span className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-cyan-100 to-cyan-500 drop-shadow-[0_0_25px_rgba(6,182,212,0.4)] tracking-tight">
-                        {data.predictions['Hybrid FinBERT-LSTM'].toFixed(2)}
+                        {data.predictions['Hybrid FinBERT-LSTM']?.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -438,13 +433,15 @@ export default function Dashboard() {
         {activeTab === 'performance' && data && (
           <div className="space-y-6 animate-in fade-in duration-500">
              
-             {/* STATS MATRIX (TANPA HIGHLIGHT) */}
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(data.metrics).map(([mname, mvals]: any) => {
+             {/* STATS MATRIX (Filter out SVR & Update layout to 3 columns) */}
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(data.metrics)
+                .filter(([mname]) => mname !== 'SVR')
+                .map(([mname, mvals]: any) => {
                 return (
                   <div key={mname} className="bg-white/[0.02] border border-white/[0.05] p-5 rounded-2xl relative backdrop-blur-md transition-all hover:bg-white/[0.04]">
                     <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">{mname}</h3>
-                    <div className="text-2xl font-black font-mono mb-1 text-slate-200">{mvals.MAE.toFixed(3)}</div>
+                    <div className="text-2xl font-black font-mono mb-1 text-slate-200">{mvals?.MAE?.toFixed(3) || '0.000'}</div>
                     <div className="text-[10px] font-mono text-slate-500 uppercase">MAE Error Rate</div>
                   </div>
                 );
@@ -452,7 +449,7 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* RADAR CHART */}
+              {/* RADAR CHART (Tanpa SVR) */}
               <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6">
                 <h2 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-6">Capability Radar Matrix</h2>
                 <div className="h-72">
@@ -464,19 +461,18 @@ export default function Dashboard() {
                       <Radar name="Hybrid" dataKey="Hybrid" stroke={colors.hybrid} strokeWidth={2} fill={colors.hybrid} fillOpacity={0.3} />
                       <Radar name="LSTM" dataKey="LSTM" stroke={colors.lstm} strokeWidth={2} fill="transparent" />
                       <Radar name="ARIMA" dataKey="ARIMA" stroke={colors.arima} strokeWidth={2} fill="transparent" />
-                      <Radar name="SVR" dataKey="SVR" stroke={colors.svr} strokeWidth={2} fill="transparent" />
                       <RechartsTooltip content={<CustomRadarTooltip />} cursor={{fill: 'rgba(255,255,255,0.02)'}} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              {/* BAR CHART */}
+              {/* BAR CHART (Tanpa SVR) */}
               <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6">
                 <h2 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-6">Absolute Error Topology</h2>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[{ name: 'MAE Assessment', Hybrid: data.metrics['Hybrid FinBERT-LSTM'].MAE, LSTM: data.metrics['LSTM (no sentiment)'].MAE, ARIMA: data.metrics['ARIMA'].MAE, SVR: data.metrics['SVR'].MAE }]}>
+                    <BarChart data={[{ name: 'MAE Assessment', Hybrid: data.metrics['Hybrid FinBERT-LSTM']?.MAE, LSTM: data.metrics['LSTM (no sentiment)']?.MAE, ARIMA: data.metrics['ARIMA']?.MAE }]}>
                       <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
                       <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
@@ -484,14 +480,13 @@ export default function Dashboard() {
                       <Bar dataKey="Hybrid" fill={colors.hybrid} radius={[6, 6, 0, 0]} />
                       <Bar dataKey="LSTM" fill={colors.lstm} radius={[6, 6, 0, 0]} />
                       <Bar dataKey="ARIMA" fill={colors.arima} radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="SVR" fill={colors.svr} radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             </div>
 
-            {/* STACKED ACTUAL VS PREDICTED TIME SERIES CHARTS */}
+            {/* STACKED ACTUAL VS PREDICTED TIME SERIES CHARTS (Tanpa SVR) */}
             <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6 space-y-8">
               <div className="border-b border-white/[0.05] pb-4 flex items-center justify-between">
                 <h2 className="text-[10px] font-bold tracking-[0.2em] text-cyan-400 uppercase flex items-center gap-2">
@@ -503,8 +498,7 @@ export default function Dashboard() {
               {[
                 { key: 'Hybrid', title: 'Prediksi vs Aktual — Hybrid FinBERT-LSTM', color: colors.hybrid },
                 { key: 'LSTM', title: 'Prediksi vs Aktual — LSTM (tanpa sentimen)', color: colors.lstm },
-                { key: 'ARIMA', title: 'Prediksi vs Aktual — ARIMA', color: colors.arima },
-                { key: 'SVR', title: 'Prediksi vs Aktual — SVR', color: colors.svr }
+                { key: 'ARIMA', title: 'Prediksi vs Aktual — ARIMA', color: colors.arima }
               ].map((model, idx) => (
                 <div key={model.key} className="relative">
                   <h3 className="text-[10px] text-slate-400 font-mono absolute top-2 left-10 z-10">{model.title}</h3>
@@ -520,12 +514,12 @@ export default function Dashboard() {
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
-                  {idx < 3 && <div className="border-b border-white/[0.05] mt-6" />}
+                  {idx < 2 && <div className="border-b border-white/[0.05] mt-6" />}
                 </div>
               ))}
             </div>
 
-            {/* SCATTER PLOT ANALYSIS (ACTUAL VS PREDICTED) */}
+            {/* SCATTER PLOT ANALYSIS (Tanpa SVR & Layout ke 3 kolom) */}
             <div className="bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl rounded-3xl p-6 space-y-6">
               <div className="border-b border-white/[0.05] pb-4 flex items-center justify-between">
                 <h2 className="text-[10px] font-bold tracking-[0.2em] text-cyan-400 uppercase flex items-center gap-2">
@@ -533,12 +527,11 @@ export default function Dashboard() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   { key: 'Hybrid', title: 'Hybrid FinBERT-LSTM', metricKey: 'Hybrid FinBERT-LSTM', color: colors.hybrid },
                   { key: 'LSTM', title: 'LSTM (No Sentiment)', metricKey: 'LSTM (no sentiment)', color: colors.lstm },
-                  { key: 'ARIMA', title: 'ARIMA', metricKey: 'ARIMA', color: colors.arima },
-                  { key: 'SVR', title: 'SVR', metricKey: 'SVR', color: colors.svr }
+                  { key: 'ARIMA', title: 'ARIMA', metricKey: 'ARIMA', color: colors.arima }
                 ].map((model) => (
                   <div key={model.key} className="relative bg-[#050505]/30 border border-white/5 rounded-xl p-4 hover:border-white/10 transition-colors">
                     <div className="text-center mb-3">
@@ -579,7 +572,7 @@ export default function Dashboard() {
               <ShieldAlert className="text-cyan-400 mt-0.5 shrink-0" size={24} />
               <div className="text-sm text-cyan-100/70 leading-relaxed">
                 <strong className="text-cyan-400 block mb-1.5 tracking-wider text-[11px] uppercase">Riset Kesimpulan</strong>
-                Mengintegrasikan NLP embeddings (FinBERT) ke dalam model <i>sequence</i> (LSTM) mendemonstrasikan supremasi komputasi. Varian Hybrid meminimalkan fungsi <i>loss</i> absolut (MAE) secara optimal dibandingkan dengan varian LSTM tanpa NLP (FinBERT).
+                Mengintegrasikan NLP embeddings (FinBERT) ke dalam model <i>sequence</i> (LSTM) mendemonstrasikan supremasi komputasi. Varian Hybrid meminimalkan fungsi <i>loss</i> absolut (MAE) secara optimal dibandingkan dengan varian LSTM tanpa NLP (FinBERT) maupun model statistik (ARIMA).
               </div>
             </div>
           </div>
